@@ -3,7 +3,7 @@ FROM bigdata/hive:3.0.0
 MAINTAINER Tyler Chen <iffiff1@gmail.com>
 
 ENV PRESTO_VERSION 0.206
-ENV PRESTO_URL http://repo1.maven.org/maven2/com/facebook/presto/presto-server/$PRESTO_VERSION/presto-server-$PRESTO_VERSION.tar.gz
+ENV PRESTO_URL http://maven.aliyun.com/nexus/content/groups/public/com/facebook/presto/presto-server/$PRESTO_VERSION/presto-server-$PRESTO_VERSION.tar.gz
 ENV PRESTO_JDBC_CLI https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/0.206/presto-cli-0.206-executable.jar
 ENV PRESTO_HOME ${USER_HOME}/presto
 
