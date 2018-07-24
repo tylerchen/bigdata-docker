@@ -1,0 +1,104 @@
+namenode:
+  image: bigdata/hadoop:2.8.4
+  hostname: namenode
+  container_name: namenode
+  domainname: hadoop
+  net: hadoop
+  volumes:
+    - /root/bigdata/data:/data
+  environment:
+    - CLUSTER_NAME=foss-cluster
+    - STARTUP_SCRIPT=source /hadoop-entrypoint.sh $$@,,,source /write-config.sh $$@,,,source /namenode.sh $$@,,,
+  ports:
+    - "50070:50070"
+    - "8020:8020"
+datanode1:
+  image: bigdata/hadoop:2.8.4
+  hostname: datanode1
+  container_name: datanode1
+  domainname: hadoop
+  net: hadoop
+  volumes:
+    - /root/bigdata/data:/data
+  environment:
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    - CORE_CONF_hadoop_http_staticuser_user=root
+    - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+    - CORE_CONF_hadoop_proxyuser_hue_groups=*
+    - STARTUP_SCRIPT=source /hadoop-entrypoint.sh $$@,,,source /write-config.sh $$@,,,source /datanode.sh $$@,,,
+resourcemanager:
+  image: bigdata/hadoop:2.8.4
+  hostname: resourcemanager
+  container_name: resourcemanager
+  domainname: hadoop
+  net: hadoop
+  environment:
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    - YARN_CONF_yarn_log___aggregation___enable=true
+    - STARTUP_SCRIPT=source /hadoop-entrypoint.sh $$@,,,source /write-config.sh $$@,,,source /resourcemanager.sh $$@,,,
+nodemanager1:
+  image: bigdata/hadoop:2.8.4
+  hostname: nodemanager1
+  container_name: nodemanager1
+  domainname: hadoop
+  net: hadoop
+  environment:
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+    - YARN_CONF_yarn_log___aggregation___enable=true
+    - YARN_CONF_yarn_nodemanager_remote___app___log___dir=/data/hadoop/app-logs
+    - STARTUP_SCRIPT=source /hadoop-entrypoint.sh $$@,,,source /write-config.sh $$@,,,source /nodemanager.sh $$@,,,
+
+mysql:
+  image: mysql:5.6
+  hostname: mysql
+  container_name: mysql
+  domainname: hadoop
+  net: hadoop
+  volumes:
+    - /root/bigdata/data/mysql:/var/lib/mysql
+  environment:
+    - MYSQL_ROOT_PASSWORD=iff
+    - MYSQL_DATABASE=metastore_db
+    - MYSQL_USER=iff
+    - MYSQL_PASSWORD=iff
+  ports:
+    - "3306:3306"
+
+adminer:
+  image: adminer
+  hostname: adminer
+  container_name: adminer
+  domainname: hadoop
+  net: hadoop
+  restart: always
+  ports:
+    - "13306:8080"
+
+hive:
+  image: bigdata/hive:3.0.0
+  hostname: hive
+  container_name: hive
+  domainname: hadoop
+  net: hadoop
+  environment:
+    - HIVE_CONF_javax_jdo_option_ConnectionURL=jdbc:mysql://mysql:3306/metastore_db
+    - HIVE_CONF_javax_jdo_option_ConnectionDriverName=com.mysql.jdbc.Driver
+    - HIVE_CONF_javax_jdo_option_ConnectionUserName=iff
+    - HIVE_CONF_javax_jdo_option_ConnectionPassword=iff
+    - HIVE_CONF_hive_metastore_uris=thrift://hive:9083
+    - HIVE_CONF_hive_metastore_schema_verification=false
+    - HIVE_CONF_hive_metastore_warehouse_dir=hdfs://namenode:8020/usr/hive/warehouse
+    - HIVE_CONF_datanucleus_autoCreateSchema=false
+    - HIVE_CONF_hive_server2_webui_host=0.0.0.0
+    - HIVE_CONF_hive_server2_webui_port=10002
+    - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+    - CORE_CONF_hadoop_http_staticuser_user=root
+    - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+    - CORE_CONF_hadoop_proxyuser_hue_groups=*
+    - HDFS_CONF_dfs_namenode_datanode_registration_ip___hostname___check=false
+    - STARTUP_SCRIPT=sleep 10,,,source /hadoop-entrypoint.sh $$@,,,source /hive-entrypoint.sh $$@,,,source /write-config.sh $$@,,,source /hive-meta.sh &,,,source /hive.sh,,,
+  ports:
+    - "9083:9083"
+    - "10000:10000"
+    - "10002:10002"
